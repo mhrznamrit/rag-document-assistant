@@ -32,6 +32,7 @@ The project demonstrates practical AI engineering across **RAG, embeddings, vect
 
 ## Architecture
 
+```text
                          Client
                     Browser / Postman
                          / curl
@@ -98,6 +99,7 @@ The project demonstrates practical AI engineering across **RAG, embeddings, vect
                             +---------------------------+
                             | Answer + Source Chunks    |
                             +---------------------------+
+````
 
 ---
 
@@ -105,6 +107,7 @@ The project demonstrates practical AI engineering across **RAG, embeddings, vect
 
 The application follows a standard retrieval-augmented generation pipeline:
 
+```text
 Upload Document
       |
       v
@@ -135,6 +138,7 @@ Groq LLM
       |
       v
 Answer + Sources
+```
 
 ### Document ingestion
 
@@ -148,7 +152,9 @@ The application uses a Hugging Face Sentence Transformer embedding model.
 
 The current embedding dimension is:
 
+```text
 384
+```
 
 ### Vector storage
 
@@ -156,15 +162,19 @@ Embeddings and document metadata are stored in PostgreSQL using the `pgvector` e
 
 The main vector table is:
 
+```text
 document_embeddings
+```
 
 Relevant data includes:
 
+```text
 langchain_id
 content
 embedding
 langchain_metadata
 user_id
+```
 
 ### Retrieval
 
@@ -172,11 +182,13 @@ Questions are matched against stored document embeddings using cosine similarity
 
 The application retrieves the top 3 relevant chunks:
 
+```python
 similarity_search(
     question,
     k=3,
     filter={"user_id": current_user_id}
 )
+```
 
 The `user_id` filter is important because it prevents users from retrieving document chunks belonging to other users.
 
@@ -188,7 +200,9 @@ The prompt instructs the model to answer using only the retrieved context.
 
 If the information cannot be found in the retrieved documents, the application instructs the model to respond:
 
+```text
 I don't have enough information in the provided documents.
+```
 
 ---
 
@@ -198,14 +212,18 @@ The API uses JWT bearer authentication.
 
 ### Registration
 
+```http
 POST /auth/register
+```
 
 Example:
 
+```json
 {
   "email": "user@example.com",
   "password": "your-password"
 }
+```
 
 Passwords are hashed using Argon2 through `pwdlib`.
 
@@ -213,25 +231,33 @@ Passwords are hashed using Argon2 through `pwdlib`.
 
 ### Login
 
+```http
 POST /auth/login
+```
 
 Example:
 
+```json
 {
   "email": "user@example.com",
   "password": "your-password"
 }
+```
 
 Response:
 
+```json
 {
   "access_token": "<JWT>",
   "token_type": "bearer"
 }
+```
 
 Protected endpoints use:
 
+```http
 Authorization: Bearer <JWT>
+```
 
 ---
 
@@ -239,12 +265,14 @@ Authorization: Bearer <JWT>
 
 Each user's uploaded documents are stored under their user ID:
 
+```text
 data/
 └── documents/
     ├── <user-id-1>/
     │   └── document.txt
     └── <user-id-2>/
         └── document.txt
+```
 
 Vector records also contain the corresponding `user_id`.
 
@@ -252,6 +280,7 @@ Retrieval is always filtered using the authenticated user's ID.
 
 Therefore:
 
+```text
 User A
   |
   +--> Can retrieve User A's documents
@@ -263,6 +292,7 @@ User B
   +--> Can retrieve User B's documents
   |
   +--> Cannot retrieve User A's documents
+```
 
 This provides application-level document ownership and retrieval isolation.
 
@@ -293,6 +323,7 @@ The application also prevents the same user from indexing the same document sour
 
 ## Project Structure
 
+```text
 rag-document-assistant/
 │
 ├── data/
@@ -326,6 +357,7 @@ rag-document-assistant/
 ├── pyproject.toml
 ├── README.md
 └── uv.lock
+```
 
 ### Module responsibilities
 
@@ -361,9 +393,11 @@ PostgreSQL/pgvector initialization, storage, retrieval configuration, and duplic
 
 Main RAG workflow:
 
+```text
 Load → Chunk → Embed → Store
                     ↓
 Question → Retrieve → Context → LLM → Answer
+```
 
 **`schemas.py`**
 
@@ -388,35 +422,45 @@ Pydantic request and response models.
 
 ### Health Check
 
+```http
 GET /health
+```
 
 Response:
 
+```json
 {
   "status": "healthy"
 }
+```
 
 ---
 
 ### Upload a Document
 
+```http
 POST /documents/upload
 Authorization: Bearer <JWT>
 Content-Type: multipart/form-data
+```
 
 Example with PowerShell:
 
+```powershell
 curl.exe -X POST http://127.0.0.1:8000/documents/upload `
   -H "Authorization: Bearer $TOKEN" `
   -F "file=@data/documents/sample.txt"
+```
 
 Example response:
 
+```json
 {
   "filename": "sample.txt",
   "file_type": "txt",
   "message": "Document uploaded and indexed successfully. Created 5 chunks."
 }
+```
 
 The number of chunks depends on the document.
 
@@ -424,18 +468,23 @@ The number of chunks depends on the document.
 
 ### Ask a Question
 
+```http
 POST /ask
 Authorization: Bearer <JWT>
 Content-Type: application/json
+```
 
 Request:
 
+```json
 {
   "question": "What is this document about?"
 }
+```
 
 Response:
 
+```json
 {
   "question": "What is this document about?",
   "answer": "The document describes...",
@@ -447,6 +496,7 @@ Response:
     }
   ]
 }
+```
 
 ---
 
@@ -454,6 +504,7 @@ Response:
 
 Create a `.env` file in the project root:
 
+```env
 DATABASE_URL=postgresql+psycopg://raguser:ragpassword@localhost:5433/ragdb
 
 GROQ_API_KEY=your_groq_api_key
@@ -461,6 +512,7 @@ GROQ_API_KEY=your_groq_api_key
 HF_TOKEN=your_huggingface_token
 
 JWT_SECRET_KEY=your_long_random_secret
+```
 
 Never commit `.env` or API credentials to Git.
 
@@ -470,15 +522,21 @@ The `.gitignore` file already excludes `.env`.
 
 When running with Docker Compose, the application connects to PostgreSQL using the Docker service name:
 
+```text
 postgres:5432
+```
 
 The host machine exposes PostgreSQL on:
 
+```text
 localhost:5433
+```
 
 The API is exposed on:
 
+```text
 localhost:8000
+```
 
 ---
 
@@ -494,19 +552,27 @@ localhost:8000
 
 ### Install dependencies
 
+```powershell
 uv sync
+```
 
 ### Activate environment
 
+```powershell
 .venv\Scripts\Activate.ps1
+```
 
 ### Start the API
 
+```powershell
 uv run uvicorn rag_document_assistant.main:app --reload
+```
 
 The API will be available at:
 
+```text
 http://127.0.0.1:8000
+```
 
 ---
 
@@ -516,32 +582,46 @@ The recommended way to run the complete application is Docker Compose.
 
 Build and start:
 
+```powershell
 docker compose up -d --build
+```
 
 Check services:
 
+```powershell
 docker compose ps
+```
 
 The deployment contains:
 
+```text
 rag-api
 rag-postgres
+```
 
 ### API health
 
+```powershell
 curl.exe -i http://127.0.0.1:8000/health
+```
 
 Expected:
 
+```text
 HTTP/1.1 200 OK
+```
 
 ### Stop services
 
+```powershell
 docker compose down
+```
 
 To remove the PostgreSQL volume as well:
 
+```powershell
 docker compose down -v
+```
 
 > `docker compose down -v` deletes the persistent PostgreSQL data.
 
@@ -553,15 +633,21 @@ FastAPI automatically generates interactive API documentation.
 
 ### Swagger UI
 
+```text
 http://127.0.0.1:8000/docs
+```
 
 ### ReDoc
 
+```text
 http://127.0.0.1:8000/redoc
+```
 
 ### OpenAPI Schema
 
+```text
 http://127.0.0.1:8000/openapi.json
+```
 
 Swagger UI can be used to manually test the API.
 
@@ -571,7 +657,9 @@ Swagger UI can be used to manually test the API.
 
 Run the test suite:
 
+```powershell
 uv run pytest -v
+```
 
 Current tests cover:
 
@@ -582,11 +670,15 @@ Current tests cover:
 
 Example result:
 
+```text
 4 passed
+```
 
 The retrieval isolation test verifies that vector search receives the authenticated user's ID:
 
+```python
 filter={"user_id": str(user_id)}
+```
 
 ---
 
@@ -614,11 +706,15 @@ Only `.txt` and `.pdf` uploads are accepted.
 
 Uploads are limited to:
 
+```text
 10 MB
+```
 
 Larger files return:
 
+```text
 413 Request Entity Too Large
+```
 
 ### Filename handling
 
@@ -634,15 +730,19 @@ API keys, tokens, and JWT secrets are loaded from environment variables rather t
 
 Current RAG configuration includes:
 
+```text
 Embedding dimensions: 384
 Retrieval top-k: 3
 Distance strategy: Cosine similarity
 Upload limit: 10 MB
 LLM temperature: 0
+```
 
 The configured LLM is:
 
+```text
 openai/gpt-oss-20b
+```
 
 ---
 
