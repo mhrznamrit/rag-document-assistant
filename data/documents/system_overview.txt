@@ -1,0 +1,13 @@
+RAG Document Assistant - System Overview
+
+The RAG Document Assistant uses Retrieval-Augmented Generation.
+
+The system stores document chunks in PostgreSQL using the pgvector extension.
+When a user asks a question, the application retrieves relevant
+chunks from the vector database.
+
+The retrieved chunks are provided as context to a language model.
+The language model generates an answer based on the retrieved
+document context.
+
+The API is implemented using FastAPI.

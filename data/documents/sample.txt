@@ -1,0 +1,24 @@
+RAG Document Assistant - Sample Knowledge Base
+
+The Document Assistant is an AI-powered question answering system.
+
+Users can upload documents to the knowledge base. The system processes
+the documents, divides them into smaller chunks, creates vector
+representations of those chunks, and stores them for semantic search.
+
+When a user asks a question, the system searches the knowledge base
+for relevant information and provides the retrieved context to the
+language model.
+
+The system is designed to provide answers based on the documents
+available in the knowledge base.
+
+Document ingestion consists of loading documents, cleaning text,
+splitting text into chunks, generating embeddings, and storing the
+embeddings in a vector database.
+
+The application exposes an API through FastAPI.
+
+The health endpoint is available at /health.
+
+The question answering endpoint will eventually be available at /ask.
